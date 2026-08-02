@@ -1,8 +1,6 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    turbo: false, // fuerza Webpack
-  },
+  // Si no tienes nada especial, puede estar vacío
 };
+
 module.exports = nextConfig;
