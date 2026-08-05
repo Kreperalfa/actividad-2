@@ -2,8 +2,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { logReturns } from "../lib/finance";
-import { runEvolution } from "../lib/evolution";
 import Dashboard from "../components/Dashboard";
 import styles from "./page.module.css";
 
@@ -16,36 +14,14 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Llamada al API interno
+        // 1. Llamada al API interno (ya devuelve todo procesado)
         const res = await fetch("/api/data", { cache: "no-store" });
-        const rawData = await res.json();
+        const { bestFitness, distributionData, fitnessData } = await res.json();
 
-        // 2. Procesar datos: convertir precios en retornos logarítmicos
-        const assetNames = Object.keys(rawData);
-        const assetReturns = assetNames.map(name => logReturns(rawData[name]));
-
-        // 3. Ejecutar el motor evolutivo
-        const { bestChromosome, bestFitness, fitnessHistory } = runEvolution(
-          assetReturns,
-          assetNames.length
-        );
-
-        // Transformar fitnessHistory en datos para la gráfica
-        const fitnessDataFormatted = fitnessHistory.map((value, index) => ({
-          generation: index,
-          fitness: value,
-        }));
-
-        // 4. Preparar datos para el Dashboard
-        const distributionData = assetNames.map((name, i) => ({
-          name,
-          value: bestChromosome[i],
-        }));
-
-        // 5. Actualizar estados
+        // 2. Actualizar estados directamente
         setBestFitness(bestFitness);
         setDistributionData(distributionData);
-        setFitnessData(fitnessDataFormatted);
+        setFitnessData(fitnessData);
       } catch (err) {
         console.error("Error al cargar datos:", err);
         setError("No se pudieron cargar los datos de mercado. Intenta de nuevo más tarde.");
