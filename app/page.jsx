@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { logReturns } from "../lib/finance";
 import { runEvolution } from "../lib/evolution";
-import Dashboard from "../components/Dashboard";
+import Dashboard from "../components/dashboard";
 import styles from "./page.module.css";
 
 export default function Home() {
