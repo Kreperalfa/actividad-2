@@ -1,5 +1,7 @@
 // app/api/data/route.js
 import yahooFinance from "yahoo-finance2";
+import { logReturns } from "@/lib/finance";
+import { runEvolution } from "@/lib/evolution";
 
 export async function GET() {
   const tickers = [
@@ -9,6 +11,7 @@ export async function GET() {
   ];
   const results = {};
 
+  // 1. Descargar precios históricos
   for (const ticker of tickers) {
     try {
       const data = await yahooFinance.historical(ticker, {
@@ -17,7 +20,6 @@ export async function GET() {
         interval: "1d",
       });
 
-      // Guardamos solo los precios ajustados de cierre
       results[ticker] = data.map(d => d.adjClose);
     } catch (error) {
       console.error(`Error al obtener datos de ${ticker}:`, error.message);
@@ -25,5 +27,31 @@ export async function GET() {
     }
   }
 
-  return Response.json(results);
+  // 2. Procesar retornos logarítmicos
+  const assetNames = Object.keys(results);
+  const assetReturns = assetNames.map(name => logReturns(results[name]));
+
+  // 3. Ejecutar motor evolutivo
+  const { bestChromosome, bestFitness, fitnessHistory } = runEvolution(
+    assetReturns,
+    assetNames.length
+  );
+
+  // 4. Formatear datos para el dashboard
+  const distributionData = assetNames.map((name, i) => ({
+    name,
+    value: bestChromosome[i],
+  }));
+
+  const fitnessData = fitnessHistory.map((value, index) => ({
+    generation: index,
+    fitness: value,
+  }));
+
+  // 5. Respuesta final
+  return Response.json({
+    bestFitness,
+    distributionData,
+    fitnessData,
+  });
 }
